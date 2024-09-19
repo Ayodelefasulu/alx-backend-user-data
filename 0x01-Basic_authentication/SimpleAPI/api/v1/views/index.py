@@ -36,3 +36,15 @@ def unauthorized() -> None:
     #stats['users'] = User.count()
     #return jsonify(stats)
     abort(401)
+
+@app_views.route('/forbidden', methods=['GET'], strict_slashes=False)
+def forbidden() -> None:
+    """ GET /api/v1/unathorized
+    Return:
+      - returns forbidden error
+    """
+    #from models.user import User
+    #stats = {}
+    #stats['users'] = User.count()
+    #return jsonify(stats)
+    abort(403)
