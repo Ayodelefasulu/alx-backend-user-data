@@ -18,10 +18,16 @@ CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 def not_found(error) -> str:
     """ Not found handler
     """
-    return jsonify({"error": "Not found"}), 404
+    return jsonify({"error": "Not Found"}), 404
+
+@app.errorhandler(401)
+def unauthorized(error) -> str:
+    """Unauthorized
+    """
+    return jsonify({"error": "Unauthorized"}), 401
 
 
 if __name__ == "__main__":
     host = getenv("API_HOST", "0.0.0.0")
     port = getenv("API_PORT", "5000")
-    app.run(host=host, port=port)
+    app.run(host=host, port=port, debug=True)
