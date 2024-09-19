@@ -7,7 +7,8 @@ from api.v1.views import app_views
 from flask import Flask, jsonify, abort, request
 from flask_cors import (CORS, cross_origin)
 import os
-import pdb
+# import pdb
+import importlib
 from api.v1.auth.auth import Auth
 
 
@@ -15,7 +16,7 @@ app = Flask(__name__)
 app.register_blueprint(app_views)
 CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 
-#initialize auth variable
+# initialize auth variable
 auth = None
 
 # Load auth instance based on AUTH_TYPE environment variable
@@ -35,21 +36,22 @@ else:
 @app.before_request
 def before_request():
     """ Filter each request """
-    pdb.set_trace()
+    # pdb.set_trace()
     if auth is None:
         return
 
     # List of paths that do not require authentication
-    public_paths = ['/api/v1/status/', '/api/v1/unauthorized/', '/api/v1/forbidden/']
+    public_paths = [
+        '/api/v1/status/',
+        '/api/v1/unauthorized/',
+        '/api/v1/forbidden/']
 
     if request.path not in public_paths:
         if auth.require_auth(request.path, public_paths):
             if auth.authorization_header(request) is None:
-                #abort(401)  # Unauthorized
-                unauthorized(error)
+                abort(401)  # Unauthorized
             if auth.current_user(request) is None:
-                #abort(403)  # Forbidden
-                forbidden(error)
+                abort(403)  # Forbidden
 
 
 @app.errorhandler(404)
@@ -58,11 +60,13 @@ def not_found(error) -> str:
     """
     return jsonify({"error": "Not Found"}), 404
 
+
 @app.errorhandler(401)
 def unauthorized(error) -> str:
     """Unauthorized
     """
     return jsonify({"error": "Unauthorized"}), 401
+
 
 @app.errorhandler(403)
 def forbidden(error) -> str:

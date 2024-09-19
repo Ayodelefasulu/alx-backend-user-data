@@ -3,15 +3,17 @@
 
 from flask import Request
 from typing import List, TypeVar
-import pdb
+# import pdb
 
 # Define a type variable 'User'
 User = TypeVar('User')
 
+
 class Auth:
     def require_auth(self, path: str, excluded_paths: List[str]) -> bool:
-        """ Return True if authentication is required for the path, else False """
-        pdb.set_trace()
+        """ Return True if authentication is required for the path,
+        else False """
+        # pdb.set_trace()
         if path is None:
             return True
         if excluded_paths is None or len(excluded_paths) == 0:
