@@ -79,3 +79,12 @@ class Auth:
             pass
 
         return False
+
+    def _generate_uuid(self) -> str:
+        """
+        Generate a new UUID and return its string representation.
+
+        Returns:
+            str: A string representation of a new UUID.
+        """
+        return str(uuid.uuid4())  # Generate a new UUID and return it as a string
