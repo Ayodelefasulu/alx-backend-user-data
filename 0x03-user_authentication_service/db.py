@@ -65,3 +65,28 @@ class DB:
         except InvalidRequestError:
             # Raise InvalidRequestError if the query arguments are invalid
             raise InvalidRequestError("Invalid query arguments.")
+
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """
+        Updates a user's attributes in the database.
+
+        :param user_id: The ID of the user to update.
+        :param kwargs: Arbitrary keyword arguments representing the user's attributes to update.
+        :raises ValueError: If a given attribute does not exist on the User model.
+        """
+        try:
+            # Find the user by their ID
+            user = self.find_user_by(id=user_id)
+        except NoResultFound:
+            raise ValueError(f"User with id {user_id} not found.")
+
+        # Update the user's attributes
+        for key, value in kwargs.items():
+            # Ensure the attribute exists on the user model
+            if not hasattr(user, key):
+                raise ValueError(f"Attribute '{key}' does not exist on User model.")
+            # Set the attribute dynamically
+            setattr(user, key, value)
+
+        # Commit the changes to the database
+        self._session.commit()
