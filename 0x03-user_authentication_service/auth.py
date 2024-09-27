@@ -3,6 +3,7 @@
 Authentication module for user service
 """
 
+import uuid
 import bcrypt
 from user import User
 from db import DB
@@ -24,6 +25,7 @@ def _hash_password(password: str) -> bytes:
     salt = bcrypt.gensalt()
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed_password
+
 
 class Auth:
     """Auth class to interact with the authentication database.
@@ -87,4 +89,33 @@ class Auth:
         Returns:
             str: A string representation of a new UUID.
         """
-        return str(uuid.uuid4())  # Generate a new UUID and return it as a string
+        return str(
+            uuid.uuid4())  # Generate a new UUID and return it as a string
+
+    def create_session(self, email: str) -> str:
+        """
+        Create a session for the user with the given email.
+        Find the user, generate a new UUID, and save it as the session ID.
+
+        Args:
+            email (str): The email of the user to create a session for.
+
+        Returns:
+            str: The session ID as a string if successful,
+                or None if the user is not found.
+        """
+        try:
+            # Find the user by email
+            user = self._db.find_user_by(email=email)
+
+            # Generate a new session ID (UUID)
+            session_id = self._generate_uuid()
+
+            # Update the user's session_id field with the new session ID
+            self._db.update_user(user.id, session_id=session_id)
+
+            # Return the session ID
+            return session_id
+        except Exception:
+            # If user is not found or any other exception occurs, return None
+            return None
