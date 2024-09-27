@@ -9,6 +9,7 @@ from user import User
 from db import DB
 from sqlalchemy.orm.exc import NoResultFound
 from bcrypt import hashpw, gensalt
+from typing import Optional
 
 
 def _hash_password(password: str) -> bytes:
@@ -119,3 +120,107 @@ class Auth:
         except Exception:
             # If user is not found or any other exception occurs, return None
             return None
+
+    def get_user_from_session_id(
+            self, session_id: Optional[str]) -> Optional[User]:
+        """
+        Takes a session_id string and returns the corresponding User or None.
+
+        Args:
+            session_id (str): The session ID string.
+
+        Returns:
+            User or None: The user corresponding to the session_id or None.
+        """
+        # Step 1: Check if the session ID is None
+        if session_id is None:
+            return None
+
+        # Step 2: Try to find the user with the given session_id
+        try:
+            user = self._db.find_user_by(session_id=session_id)
+        except NoResultFound:  # Import this exception from appropriate module
+            return None
+
+        # Step 3: Return the user or None
+        return user
+
+    def destroy_session(self, user_id: int) -> None:
+        """
+        Takes a user_id and updates corresponding user's session ID to None.
+
+        Args:
+            user_id (int): User ID of user whose session should be destroyed.
+
+        Returns:
+            None
+        """
+        # Step 1: Try to find the user by the given user_id
+        try:
+            user = self._db.find_user_by(id=user_id)
+        except NoResultFound:
+            return None
+
+        # Step 2: Update the user's session ID to None
+        self._db.update_user(user.id, session_id=None)
+
+        # Step 3: Return None
+        return None
+
+    def get_reset_password_token(self, email: str) -> str:
+        """
+        Finds the user by email and generates a reset password token.
+
+        Args:
+            email (str): The email of the user requesting a password reset.
+
+        Returns:
+            str: The generated reset password token.
+
+        Raises:
+            ValueError: If the user does not exist.
+        """
+        # Step 1: Find the user by email
+        user = self._db.find_user_by(email=email)
+        if user is None:
+            # Step 2: If user does not exist, raise a ValueError
+            raise ValueError("User with this email does not exist.")
+
+        # Step 3: Generate a reset token using uuid
+        reset_token = str(uuid.uuid4())
+
+        # Step 4: Update the user's reset_token field in the database
+        self._db.update_user(user.id, reset_token=reset_token)
+
+        # Step 5: Return the reset token
+        return reset_token
+
+    def update_password(self, reset_token: str, password: str) -> None:
+        """
+        Update the password of the user identified by the reset token.
+
+        Args:
+            reset_token (str): The reset token used to find the user.
+            password (str): The new password to set for the user.
+
+        Raises:
+            ValueError: If the reset token is invalid or the user is not found.
+        """
+        # Step 1: Find user by reset_token
+        user: Optional[User] = self._db.find_user_by(reset_token=reset_token)
+
+        if user is None:
+            # Step 2: Raise ValueError if no user found
+            raise ValueError("Invalid reset token")
+
+        # Step 3: Hash the new password
+        hashed_password = bcrypt.hashpw(
+            password.encode('utf-8'), bcrypt.gensalt())
+
+        # Step 4: Update user's password and reset_token
+        self._db.update_user(
+            user.id,
+            hashed_password=hashed_password,
+            reset_token=None)
+
+        # The method returns None implicitly
